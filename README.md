@@ -5,7 +5,7 @@ Discover the latest `<crypto/>` moves in my Telegram Channel:
 
 [![My Channel 🥰](https://img.shields.io/badge/Web3_Enjoyer_|_Subscribe_🥰-0A66C2?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/web3_enjoyer_club) 
 
-
+Bot used to create trading volume on the [Backpack exchange](https://backpack.exchange/refer/binance)
 ## Quick Start 📚
    1. To install libraries on Windows click on `INSTALL.bat` (or in console: `pip install -r requirements.txt`).
    2. To start bot use `START.bat` (or in console: `python main.py`).
