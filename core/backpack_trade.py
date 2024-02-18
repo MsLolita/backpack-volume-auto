@@ -1,4 +1,5 @@
 import random
+import traceback
 from asyncio import sleep
 from typing import Optional
 
@@ -7,6 +8,7 @@ from backpack import Backpack
 from better_proxy import Proxy
 from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_exception_type
 
+from .exceptions import TradeException
 from .utils import logger
 
 
@@ -67,10 +69,11 @@ class BackpackTrade(Backpack):
                 pair = random.choice(pairs)
                 if await self.trade_worker(pair):
                     break
-        except ValueError as e:
+        except TradeException as e:
             logger.info(e)
         except Exception as e:
-            logger.error(e)
+            logger.error(f"{e} / Check logs in logs/out.log")
+            logger.debug(f"{e} {traceback.format_exc()}")
 
         logger.info(f"Finished! Traded volume ~ {self.current_volume:.2f}$")
 
@@ -106,28 +109,27 @@ class BackpackTrade(Backpack):
 
         if self.trade_amount[1] > 0:
             if self.trade_amount[0] > float(amount):
-                raise ValueError(f"Not enough funds to trade. Trade Amount Stopped. Current balance ~ {amount:.2f}$")
+                raise TradeException(f"Not enough funds to trade. Trade Amount Stopped. Current balance ~ {float(amount):.2f}$")
             elif self.trade_amount[1] > amount_usd:
                 self.trade_amount[1] = amount_usd
 
             amount_usd = random.uniform(*self.trade_amount)
-            amount = amount_usd / float(price)
 
         self.current_volume += amount_usd
 
         if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
-            raise ValueError(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {amount_usd}$")
+            raise TradeException(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {amount_usd}$")
 
         return price, amount
 
     @retry(stop=stop_after_attempt(3), wait=wait_random(2, 5), reraise=True,
-           retry=retry_if_not_exception_type(ValueError))
+           retry=retry_if_not_exception_type(TradeException))
     async def trade(self, symbol: str, amount: str, side: str, price: str):
         decimal = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
         fixed_amount = to_fixed(amount, decimal)
 
         if fixed_amount == "0":
-            raise ValueError("Not enough funds to trade!")
+            raise TradeException("Not enough funds to trade!")
 
         response = await self.execute_order(symbol, side, order_type="limit", quantity=fixed_amount, price=price)
         logger.debug(f"Side: {side} | Price: {price} | Amount: {fixed_amount} | Response: {await response.text()}")
@@ -141,12 +143,11 @@ class BackpackTrade(Backpack):
 
             return True
 
-        raise ValueError(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
+        raise TradeException(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
         orderbook = await response.json()
-        # print(json.dumps(orderbook, indent=4))
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
 
