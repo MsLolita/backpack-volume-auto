@@ -59,7 +59,7 @@ class BackpackTrade(Backpack):
             proxy=proxy and Proxy.from_str(proxy.strip()).as_url
         )
 
-        self.delays, self.needed_volume, self.min_balance_to_left, self.trade_amount = args
+        self.trade_delay, self.deal_delay, self.needed_volume, self.min_balance_to_left, self.trade_amount = args
 
         self.current_volume: float = 0
 
@@ -80,6 +80,7 @@ class BackpackTrade(Backpack):
     async def trade_worker(self, pair: str):
         await self.buy(pair)
         await self.sell(pair)
+        await self.custom_delay(self.deal_delay)
 
         if self.needed_volume and self.current_volume > self.needed_volume:
             return True
@@ -146,7 +147,7 @@ class BackpackTrade(Backpack):
             logger.info(f"{side.capitalize()} {fixed_amount} {symbol}. "
                         f"Traded volume: {self.current_volume:.2f}$")
 
-            await self.custom_delay()
+            await self.custom_delay(delays=self.trade_delay)
 
             return True
 
@@ -158,8 +159,9 @@ class BackpackTrade(Backpack):
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
 
-    async def custom_delay(self):
-        if self.delays[1] > 0:
-            sleep_time = random.uniform(*self.delays)
+    @staticmethod
+    async def custom_delay(delays: tuple):
+        if delays[1] > 0:
+            sleep_time = random.uniform(*delays)
             logger.info(f"Sleep for {sleep_time:.2f} seconds")
             await sleep(sleep_time)

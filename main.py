@@ -6,7 +6,7 @@ from core.autoreger import AutoReger
 from core.backpack_trade import BackpackTrade
 from art import tprint
 
-from inputs.config import (ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH, THREADS, CUSTOM_DELAY,
+from inputs.config import (ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH, THREADS, DELAY_BETWEEN_TRADE,
                            ALLOWED_ASSETS, NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT)
 
 
@@ -20,7 +20,7 @@ def bot_info(name: str = ""):
 
 async def worker_task(account: str, proxy: str):
     api_key, api_secret = account.split(":")
-    backpack = BackpackTrade(api_key, api_secret, proxy, CUSTOM_DELAY, NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT,
+    backpack = BackpackTrade(api_key, api_secret, proxy, DELAY_BETWEEN_TRADE, DELAY_BETWEEN_DEAL, NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT,
                              TRADE_AMOUNT)
 
     await backpack.start_trading(pairs=ALLOWED_ASSETS)

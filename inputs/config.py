@@ -1,5 +1,6 @@
 THREADS = 1  # Enter amount of threads
-CUSTOM_DELAY = (1, 3)  # delay before every TRADE in seconds
+DELAY_BETWEEN_TRADE = (1, 3)  # Execute delay between every trade (Buy -> Delay -> Sell -> Buy -> Delay ...)
+DELAY_BETWEEN_DEAL = (1, 3)  # Execute delay between full trade (Buy -> Sell -> Delay -> Buy -> Sell -> Delay ...)
 
 NEEDED_TRADE_VOLUME = 0  # volume to trade, if 0 it will never stop
 MIN_BALANCE_TO_LEFT = 0  # min amount to left on the balance, if 0, it is traded until the balance is equal to 0.
