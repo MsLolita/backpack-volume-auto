@@ -4,6 +4,11 @@ import re
 from loguru import logger
 
 
+def formatter(record, format_string):
+    end = record["extra"].get("end", "\n")
+    return format_string + end + "{exception}"
+
+
 def logging_setup():
     format_info = "<green>{time:HH:mm:ss.SS}</green> <blue>{level}</blue> <level>{message}</level>"
     format_error = "<green>{time:HH:mm:ss.SS}</green> <blue>{level}</blue> | " \
@@ -13,10 +18,10 @@ def logging_setup():
     logger.remove()
 
     logger.add(file_path + "out.log", colorize=True,
-               format=clean_brackets(format_error))
+               format=lambda record: formatter(record, clean_brackets(format_error)))
 
     logger.add(sys.stdout, colorize=True,
-               format=format_info, level="INFO")  # , level="INFO"
+               format=lambda record: formatter(record, format_info), level="INFO")  # , level="INFO"
     # logger.add(sys.stderr, level=log_level, format=log_format, colorize=True, backtrace=True, diagnose=True)
 
 

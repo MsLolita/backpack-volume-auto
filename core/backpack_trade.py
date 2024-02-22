@@ -2,6 +2,7 @@ import random
 import traceback
 from asyncio import sleep
 from typing import Optional
+from math import floor
 
 from backpack import Backpack
 
@@ -12,10 +13,9 @@ from .exceptions import TradeException
 from .utils import logger
 
 
-def to_fixed(number, decimal_places):
-    if str(int(float(number))) == str(number):
-        return number
-    return str(number)[:str(number).index('.') + decimal_places + 1].strip(".")
+def to_fixed(n: str | float, d: int = 0) -> str:
+    d = int('1' + ('0' * d))
+    return str(floor(float(n) * d) / d).replace(".0", "")
 
 
 class BackpackTrade(Backpack):
@@ -87,9 +87,9 @@ class BackpackTrade(Backpack):
     async def buy(self, symbol: str):
         side = 'buy'
         token = symbol.split('_')[1]
-        price, amount = await self.get_trade_info(symbol, side, token)
+        price, balance = await self.get_trade_info(symbol, side, token)
 
-        amount = str(float(amount) / float(price))
+        amount = str(float(balance) / float(price))
 
         await self.trade(symbol, amount, side, price)
 
@@ -126,13 +126,20 @@ class BackpackTrade(Backpack):
            retry=retry_if_not_exception_type(TradeException))
     async def trade(self, symbol: str, amount: str, side: str, price: str):
         decimal = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
-        fixed_amount = to_fixed(amount, decimal)
+        fixed_amount = to_fixed(float(amount), decimal)
 
         if fixed_amount == "0":
             raise TradeException("Not enough funds to trade!")
 
+        logger.bind(end="").debug(f"Side: {side} | Price: {price} | Amount: {fixed_amount}")
+
         response = await self.execute_order(symbol, side, order_type="limit", quantity=fixed_amount, price=price)
-        logger.debug(f"Side: {side} | Price: {price} | Amount: {fixed_amount} | Response: {await response.text()}")
+
+        logger.opt(raw=True).debug(f" | Response: {await response.text()} \n")
+
+        if response.status != 200:
+            logger.info(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
+
         result = await response.json()
 
         if result.get("createdAt"):
