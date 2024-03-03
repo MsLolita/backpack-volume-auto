@@ -114,8 +114,11 @@ class BackpackTrade(Backpack):
             elif self.trade_amount[1] > amount_usd:
                 self.trade_amount[1] = amount_usd
 
-            amount_usd = random.uniform(*self.trade_amount)
-            amount = amount_usd / float(price)
+            if side == "buy":
+                amount_usd = random.uniform(*self.trade_amount)
+                amount = amount_usd
+            elif side == "sell":
+                amount = amount_usd / float(price)
 
         self.current_volume += amount_usd
 
