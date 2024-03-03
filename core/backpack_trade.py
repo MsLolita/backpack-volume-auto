@@ -115,6 +115,7 @@ class BackpackTrade(Backpack):
                 self.trade_amount[1] = amount_usd
 
             amount_usd = random.uniform(*self.trade_amount)
+            amount = amount_usd / float(price)
 
         self.current_volume += amount_usd
 
