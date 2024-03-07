@@ -9,13 +9,17 @@ from backpack import Backpack
 from better_proxy import Proxy
 from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_exception_type
 
+from inputs.config import DEPTH
 from .exceptions import TradeException
 from .utils import logger
 
 
 def to_fixed(n: str | float, d: int = 0) -> str:
     d = int('1' + ('0' * d))
-    return str(floor(float(n) * d) / d).replace(".0", "")
+    result = str(floor(float(n) * d) / d)
+    if result.endswith(".0"):
+        result = result[:-2]
+    return result
 
 
 class BackpackTrade(Backpack):
@@ -102,10 +106,11 @@ class BackpackTrade(Backpack):
         return await self.trade(symbol, amount, side, price)
 
     async def get_trade_info(self, symbol: str, side: str, token: str):
-        price = await self.get_market_price(symbol, side, 3)
+        price = await self.get_market_price(symbol, side, DEPTH)
         response = await self.get_balances()
         balances = await response.json()
         amount = balances[token]['available']
+        # print(amount, balances)
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
         if self.trade_amount[1] > 0:
@@ -157,6 +162,7 @@ class BackpackTrade(Backpack):
 
         raise TradeException(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
+    @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
         orderbook = await response.json()
