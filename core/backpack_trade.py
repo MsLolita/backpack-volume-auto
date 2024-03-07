@@ -82,8 +82,12 @@ class BackpackTrade(Backpack):
         logger.info(f"Finished! Traded volume ~ {self.current_volume:.2f}$")
 
     async def trade_worker(self, pair: str):
+        await self.custom_delay(delays=self.trade_delay)
         await self.buy(pair)
+
+        await self.custom_delay(delays=self.trade_delay)
         await self.sell(pair)
+
         await self.custom_delay(self.deal_delay)
 
         if self.needed_volume and self.current_volume > self.needed_volume:
@@ -110,7 +114,7 @@ class BackpackTrade(Backpack):
         response = await self.get_balances()
         balances = await response.json()
         amount = balances[token]['available']
-        # print(amount, balances)
+        print(amount, balances)
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
         if self.trade_amount[1] > 0:
@@ -155,8 +159,6 @@ class BackpackTrade(Backpack):
         if result.get("createdAt"):
             logger.info(f"{side.capitalize()} {fixed_amount} {symbol}. "
                         f"Traded volume: {self.current_volume:.2f}$")
-
-            await self.custom_delay(delays=self.trade_delay)
 
             return True
 
