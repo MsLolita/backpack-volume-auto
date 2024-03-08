@@ -10,7 +10,7 @@ ALLOWED_ASSETS = ["SOL_USDC", "PYTH_USDC", "JTO_USDC", "HNT_USDC", "MOBILE_USDC"
 
 # Volatility moment
 # DEPTH of limit order to trade as market order
-DEPTH = 3  # 1-20, recommend up to 10, bigger depth = better market order but more slippage
+DEPTH = 5  # 1-20, optimal - 3-5, recommend up to 10, bigger depth = better market order but more slippage
 
 
 
