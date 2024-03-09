@@ -125,7 +125,7 @@ class BackpackTrade(Backpack):
         if self.trade_amount[1] > 0:
             if self.trade_amount[0] > float(amount_usd):
                 raise TradeException(
-                    f"Not enough funds to trade. Trade Amount Stopped. Current balance ~ {float(amount):.2f}$")
+                    f"Not enough funds to trade. Trade Stopped. Current balance ~ {float(amount_usd):.2f}$")
             elif self.trade_amount[1] > amount_usd:
                 self.trade_amount[1] = amount_usd
 
