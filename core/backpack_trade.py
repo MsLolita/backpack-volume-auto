@@ -123,7 +123,7 @@ class BackpackTrade(Backpack):
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
         if self.trade_amount[1] > 0:
-            if self.trade_amount[0] > float(amount):
+            if self.trade_amount[0] > float(amount_usd):
                 raise TradeException(
                     f"Not enough funds to trade. Trade Amount Stopped. Current balance ~ {float(amount):.2f}$")
             elif self.trade_amount[1] > amount_usd:
