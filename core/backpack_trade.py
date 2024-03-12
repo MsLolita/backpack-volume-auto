@@ -1,3 +1,4 @@
+import asyncio
 import json
 import random
 import traceback
@@ -113,36 +114,44 @@ class BackpackTrade(Backpack):
 
         return await self.trade(symbol, amount, side, price)
 
-    @retry(stop=stop_after_attempt(999999), wait=wait_random(2, 5), reraise=True)
+    @retry(stop=stop_after_attempt(5), wait=wait_random(2, 5), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
-        logger.info(f"Trying to trade {symbol} | Side: {side} | Token: {token} ...")
-        price = await self.get_market_price(symbol, side, DEPTH)
-        response = await self.get_balances()
-        balances = json.loads(await response.read())
+        while True:
+            try:
+                logger.info(f"Trying to trade {symbol} | Side: {side} | Token: {token} ...")
+                price = await self.get_market_price(symbol, side, DEPTH)
+                # logger.info(f"Market price: {price} | Side: {side} | Token: {token}")
+                response = await self.get_balances()
+                # logger.info(f"Balances: {await response.text()} | Side: {side} | Token: {token}")
+                balances = json.loads(await response.read())
 
-        amount = balances[token]['available']
+                amount = balances[token]['available']
 
-        amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
+                amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
-        if self.trade_amount[1] > 0:
-            if self.trade_amount[0] > float(amount_usd):
-                raise TradeException(
-                    f"Not enough funds to trade. Trade Stopped. Current balance ~ {float(amount_usd):.2f}$")
-            elif self.trade_amount[1] > amount_usd:
-                self.trade_amount[1] = amount_usd
+                if self.trade_amount[1] > 0:
+                    if self.trade_amount[0] * 0.95 > float(amount_usd):
+                        raise TradeException(
+                            f"Not enough funds to trade. Trade Stopped. Current balance ~ {float(amount_usd):.2f}$")
+                    elif self.trade_amount[1] > amount_usd:
+                        self.trade_amount[1] = amount_usd
 
-            if side == "buy":
-                amount_usd = random.uniform(*self.trade_amount)
-                amount = amount_usd
-            elif side == "sell":
-                amount = amount_usd / float(price)
+                    if side == "buy":
+                        amount_usd = random.uniform(*self.trade_amount)
+                        amount = amount_usd
+                    elif side == "sell":
+                        amount = amount_usd / float(price)
 
-        self.current_volume += amount_usd
+                self.current_volume += amount_usd
 
-        if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
-            raise TradeException(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {amount_usd}$")
+                if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
+                    raise TradeException(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {amount_usd}$")
 
-        return price, amount
+                return price, amount
+
+            except Exception as e:
+                logger.info(f"222222 {e} {traceback.format_exc()}")
+            await asyncio.sleep(10)
 
     @retry(stop=stop_after_attempt(9), wait=wait_random(2, 5), reraise=True,
            retry=retry_if_not_exception_type((TradeException, FokOrderException)))
