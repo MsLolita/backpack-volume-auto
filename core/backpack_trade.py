@@ -1,3 +1,4 @@
+import json
 import random
 import traceback
 from asyncio import sleep
@@ -117,7 +118,7 @@ class BackpackTrade(Backpack):
     async def get_trade_info(self, symbol: str, side: str, token: str):
         price = await self.get_market_price(symbol, side, DEPTH)
         response = await self.get_balances()
-        balances = await response.json(content_type=None)
+        balances = json.loads(await response.read())
 
         amount = balances[token]['available']
 
@@ -168,7 +169,7 @@ class BackpackTrade(Backpack):
         if response.status != 200:
             logger.info(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
-        result = await response.json(content_type=None)
+        result = json.loads(await response.read())
 
         if result.get("createdAt"):
             logger.info(f"{side.capitalize()} {fixed_amount} {symbol}. "
@@ -181,7 +182,7 @@ class BackpackTrade(Backpack):
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
-        orderbook = await response.json(content_type=None)
+        orderbook = json.loads(await response.read())
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
 
