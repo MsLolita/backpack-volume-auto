@@ -117,7 +117,7 @@ class BackpackTrade(Backpack):
     async def get_trade_info(self, symbol: str, side: str, token: str):
         price = await self.get_market_price(symbol, side, DEPTH)
         response = await self.get_balances()
-        balances = await response.json()
+        balances = await response.json(content_type=None)
         amount = balances[token]['available']
 
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
@@ -167,7 +167,7 @@ class BackpackTrade(Backpack):
         if response.status != 200:
             logger.info(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
-        result = await response.json()
+        result = await response.json(content_type=None)
 
         if result.get("createdAt"):
             logger.info(f"{side.capitalize()} {fixed_amount} {symbol}. "
@@ -180,7 +180,7 @@ class BackpackTrade(Backpack):
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
-        orderbook = await response.json()
+        orderbook = await response.json(content_type=None)
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
 
