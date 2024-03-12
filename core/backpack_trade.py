@@ -93,7 +93,7 @@ class BackpackTrade(Backpack):
         if self.needed_volume and self.current_volume > self.needed_volume:
             return True
 
-    @retry(stop=stop_after_attempt(7), wait=wait_random(1, 2), reraise=True,
+    @retry(stop=stop_after_attempt(99999), wait=wait_random(1, 2), reraise=True,
            retry=retry_if_exception_type(FokOrderException))
     async def buy(self, symbol: str):
         side = 'buy'
@@ -104,7 +104,7 @@ class BackpackTrade(Backpack):
 
         await self.trade(symbol, amount, side, price)
 
-    @retry(stop=stop_after_attempt(7), wait=wait_random(1, 2), reraise=True,
+    @retry(stop=stop_after_attempt(99999), wait=wait_random(1, 2), reraise=True,
            retry=retry_if_exception_type(FokOrderException))
     async def sell(self, symbol: str):
         side = 'sell'
