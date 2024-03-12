@@ -4,11 +4,10 @@ import traceback
 from asyncio import sleep
 from typing import Optional
 from math import floor
+from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_exception_type, retry_if_exception_type
 
 from backpack import Backpack
-
 from better_proxy import Proxy
-from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_exception_type, retry_if_exception_type
 
 from inputs.config import DEPTH
 from .exceptions import TradeException, FokOrderException
