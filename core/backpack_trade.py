@@ -115,6 +115,7 @@ class BackpackTrade(Backpack):
 
     @retry(stop=stop_after_attempt(3), wait=wait_random(2, 5), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
+        logger.info(f"Trying to trade {symbol} | Side: {side} | Token: {token} ...")
         price = await self.get_market_price(symbol, side, DEPTH)
         response = await self.get_balances()
         balances = json.loads(await response.read())
