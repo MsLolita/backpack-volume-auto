@@ -118,6 +118,7 @@ class BackpackTrade(Backpack):
         price = await self.get_market_price(symbol, side, DEPTH)
         response = await self.get_balances()
         balances = await response.json(content_type=None)
+
         amount = balances[token]['available']
 
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
