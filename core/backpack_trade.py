@@ -116,7 +116,7 @@ class BackpackTrade(Backpack):
 
     @retry(stop=stop_after_attempt(10), wait=wait_random(2, 5), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
-        logger.info(f"Trying to trade {side} {token}...")
+        logger.info(f"Trying to trade {side} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
         # logger.info(f"Market price: {price} | Side: {side} | Token: {token}")
         response = await self.get_balances()
@@ -156,7 +156,7 @@ class BackpackTrade(Backpack):
     async def trade(self, symbol: str, amount: str, side: str, price: str):
         decimal = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
         fixed_amount = to_fixed(float(amount), decimal)
-        print(amount, fixed_amount)
+        # print(amount, fixed_amount)
         if fixed_amount == "0":
             raise TradeException("Not enough funds to trade!")
 
