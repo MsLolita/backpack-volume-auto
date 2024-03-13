@@ -46,7 +46,7 @@ class BackpackTrade(Backpack):
         'BONK': {
             'decimal': 0,
         },
-        "WIFI": {
+        "WIF": {
             'decimal': 0
         },
         "USDT": {
@@ -114,7 +114,7 @@ class BackpackTrade(Backpack):
 
         return await self.trade(symbol, amount, side, price)
 
-    @retry(stop=stop_after_attempt(5), wait=wait_random(2, 5), reraise=True)
+    @retry(stop=stop_after_attempt(10), wait=wait_random(2, 5), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
         while True:
             try:
@@ -128,6 +128,10 @@ class BackpackTrade(Backpack):
                 amount = balances[token]['available']
 
                 amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
+
+                if self.trade_amount[0] < 3 and self.trade_amount[1] > 0:
+                    self.trade_amount[0] = 3
+                    self.trade_amount[1] = 3
 
                 if self.trade_amount[1] > 0:
                     if self.trade_amount[0] * 0.8 > float(amount_usd):
@@ -150,7 +154,7 @@ class BackpackTrade(Backpack):
                 return price, amount
 
             except Exception as e:
-                logger.info(f"222222 {e} {traceback.format_exc()}")
+                logger.info(f"222 {e} {traceback.format_exc()}")
             await asyncio.sleep(10)
 
     @retry(stop=stop_after_attempt(9), wait=wait_random(2, 5), reraise=True,
@@ -158,7 +162,7 @@ class BackpackTrade(Backpack):
     async def trade(self, symbol: str, amount: str, side: str, price: str):
         decimal = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
         fixed_amount = to_fixed(float(amount), decimal)
-
+        print(amount, fixed_amount)
         if fixed_amount == "0":
             raise TradeException("Not enough funds to trade!")
 
