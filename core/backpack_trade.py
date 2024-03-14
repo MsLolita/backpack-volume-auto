@@ -101,9 +101,6 @@ class BackpackTrade(Backpack):
         token = symbol.split('_')[1]
         price, balance = await self.get_trade_info(symbol, side, token)
 
-        if self.min_balance_to_left > 0 and self.min_balance_to_left >= balance:
-            raise TradeException(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {balance}$")
-
         amount = str(float(balance) / float(price))
 
         await self.trade(symbol, amount, side, price)
@@ -143,6 +140,10 @@ class BackpackTrade(Backpack):
                 self.trade_amount[1] = amount_usd
 
             if side == "buy":
+                if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
+                    raise TradeException(
+                        f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {amount_usd}$")
+
                 amount_usd = random.uniform(*self.trade_amount)
                 amount = amount_usd
             elif side == "sell":
