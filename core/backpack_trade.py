@@ -94,18 +94,21 @@ class BackpackTrade(Backpack):
         if self.needed_volume and self.current_volume > self.needed_volume:
             return True
 
-    @retry(stop=stop_after_attempt(10), wait=wait_random(30, 35), reraise=True,
+    @retry(stop=stop_after_attempt(10), wait=wait_random(5, 7), reraise=True,
            retry=retry_if_exception_type(FokOrderException))
     async def buy(self, symbol: str):
         side = 'buy'
         token = symbol.split('_')[1]
         price, balance = await self.get_trade_info(symbol, side, token)
 
+        if self.min_balance_to_left > 0 and self.min_balance_to_left >= balance:
+            raise TradeException(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {balance}$")
+
         amount = str(float(balance) / float(price))
 
         await self.trade(symbol, amount, side, price)
 
-    @retry(stop=stop_after_attempt(10), wait=wait_random(30, 35), reraise=True,
+    @retry(stop=stop_after_attempt(10), wait=wait_random(5, 7), reraise=True,
            retry=retry_if_exception_type(FokOrderException))
     async def sell(self, symbol: str):
         side = 'sell'
@@ -114,7 +117,8 @@ class BackpackTrade(Backpack):
 
         return await self.trade(symbol, amount, side, price)
 
-    @retry(stop=stop_after_attempt(20), wait=wait_random(2, 5), reraise=True)
+    @retry(stop=stop_after_attempt(5), wait=wait_random(2, 5),
+           retry=retry_if_not_exception_type(TradeException), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
         logger.info(f"Trying to trade {side} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
@@ -127,9 +131,9 @@ class BackpackTrade(Backpack):
 
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
-        if self.trade_amount[0] < 3 and self.trade_amount[1] > 0:
-            self.trade_amount[0] = 3
-            self.trade_amount[1] = 3
+        if self.trade_amount[0] < 5 and self.trade_amount[1] > 0:
+            self.trade_amount[0] = 5
+            self.trade_amount[1] = 5
 
         if self.trade_amount[1] > 0:
             if self.trade_amount[0] * 0.8 > float(amount_usd):
@@ -145,9 +149,6 @@ class BackpackTrade(Backpack):
                 amount = amount_usd / float(price)
 
         self.current_volume += amount_usd
-
-        if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
-            raise TradeException(f"Not enough funds to trade. Min Balance Stopped. Current balance ~ {amount_usd}$")
 
         return price, amount
 
