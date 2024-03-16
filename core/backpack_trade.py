@@ -67,6 +67,7 @@ class BackpackTrade(Backpack):
         self.trade_delay, self.deal_delay, self.needed_volume, self.min_balance_to_left, self.trade_amount = args
 
         self.current_volume: float = 0
+        self.amount_usd = 0
 
     async def start_trading(self, pairs: list[str]):
         try:
@@ -115,7 +116,8 @@ class BackpackTrade(Backpack):
         return await self.trade(symbol, amount, side, price)
 
     @retry(stop=stop_after_attempt(5), wait=wait_random(2, 5),
-           retry=retry_if_not_exception_type(TradeException), reraise=True)
+           retry=retry_if_not_exception_type(TradeException), retry_error_callback=lambda e: logger.info(e),
+           reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
         logger.info(f"Trying to trade {side} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
@@ -149,7 +151,7 @@ class BackpackTrade(Backpack):
             elif side == "sell":
                 amount = amount_usd / float(price)
 
-        self.current_volume += amount_usd
+        self.amount_usd += amount_usd
 
         return price, amount
 
@@ -181,6 +183,8 @@ class BackpackTrade(Backpack):
         result = json.loads(await response.read())
 
         if result.get("createdAt"):
+            self.current_volume += self.amount_usd
+
             logger.info(f"{side.capitalize()} {fixed_amount} {symbol}. "
                         f"Traded volume: {self.current_volume:.2f}$")
 
