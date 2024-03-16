@@ -115,9 +115,8 @@ class BackpackTrade(Backpack):
 
         return await self.trade(symbol, amount, side, price)
 
-    @retry(stop=stop_after_attempt(5), wait=wait_random(2, 5),
-           retry=retry_if_not_exception_type(TradeException), retry_error_callback=lambda e: logger.info(e),
-           reraise=True)
+    @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), before_sleep=lambda e: logger.info(e),
+           retry=retry_if_not_exception_type(TradeException), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
         logger.info(f"Trying to trade {side} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
