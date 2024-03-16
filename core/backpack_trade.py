@@ -150,7 +150,7 @@ class BackpackTrade(Backpack):
             elif side == "sell":
                 amount = amount_usd / float(price)
 
-        self.amount_usd += amount_usd
+        self.amount_usd = amount_usd
 
         return price, amount
 
