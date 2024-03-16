@@ -62,7 +62,7 @@ class AutoReger:
     def logs(account_id: str, account: tuple, is_success: bool = False):
         if is_success:
             log_func = logger.success
-            log_msg = "Claimed!"
+            log_msg = "Handled!"
             file_name = "success"
         else:
             log_func = logger.warning
