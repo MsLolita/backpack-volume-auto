@@ -54,6 +54,9 @@ class BackpackTrade(Backpack):
         "JUP": {
             'decimal': 2
         },
+        "RENDER": {
+            'decimal': 2
+        },
         "WEN": {
             'decimal': 0
         }
