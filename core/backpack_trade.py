@@ -1,4 +1,3 @@
-import asyncio
 import json
 import random
 import traceback
@@ -54,6 +53,9 @@ class BackpackTrade(Backpack):
         },
         "JUP": {
             'decimal': 2
+        },
+        "WEN": {
+            'decimal': 0
         }
     }
 
