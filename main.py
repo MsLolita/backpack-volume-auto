@@ -6,6 +6,7 @@ from core.autoreger import AutoReger
 from core.backpack_trade import BackpackTrade
 from art import tprint
 
+from core.utils import logger
 from inputs.config import (ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH, THREADS, DELAY_BETWEEN_TRADE, DELAY_BETWEEN_DEAL,
                            ALLOWED_ASSETS, NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT)
 
@@ -20,8 +21,13 @@ def bot_info(name: str = ""):
 
 async def worker_task(account: str, proxy: str):
     api_key, api_secret = account.split(":")
-    backpack = BackpackTrade(api_key, api_secret, proxy, DELAY_BETWEEN_TRADE, DELAY_BETWEEN_DEAL,
-                             NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT)
+
+    try:
+        backpack = BackpackTrade(api_key, api_secret, proxy, DELAY_BETWEEN_TRADE, DELAY_BETWEEN_DEAL,
+                                 NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT)
+    except Exception as e:
+        logger.error(f"WRONG API SECRET KEY !!!!!!!!!!!!!!!!!!!!!!!!: {e}")
+        return
 
     await backpack.start_trading(pairs=ALLOWED_ASSETS)
 
