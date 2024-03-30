@@ -136,7 +136,7 @@ class BackpackTrade(Backpack):
 
         if not self.trade_amount[0] and not self.trade_amount[1]:
             pass
-        if self.trade_amount[1] < 5:
+        elif self.trade_amount[1] < 5:
             self.trade_amount[0] = 5
             self.trade_amount[1] = 5
         elif self.trade_amount[0] < 5:
