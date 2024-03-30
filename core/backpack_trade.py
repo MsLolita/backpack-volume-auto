@@ -134,6 +134,8 @@ class BackpackTrade(Backpack):
 
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
+        if not self.trade_amount[0] and not self.trade_amount[1]:
+            pass
         if self.trade_amount[1] < 5:
             self.trade_amount[0] = 5
             self.trade_amount[1] = 5
