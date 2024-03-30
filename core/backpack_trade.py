@@ -123,7 +123,7 @@ class BackpackTrade(Backpack):
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), before_sleep=lambda e: logger.info(e),
            retry=retry_if_not_exception_type(TradeException), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str):
-        logger.info(f"Trying to trade {side} {symbol}...")
+        logger.info(f"Trying to {side.upper()} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
         # logger.info(f"Market price: {price} | Side: {side} | Token: {token}")
         response = await self.get_balances()
@@ -134,9 +134,11 @@ class BackpackTrade(Backpack):
 
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
-        if self.trade_amount[0] < 5 and self.trade_amount[1] > 0:
+        if self.trade_amount[1] < 5:
             self.trade_amount[0] = 5
             self.trade_amount[1] = 5
+        elif self.trade_amount[0] < 5:
+            self.trade_amount[0] = 5
 
         if side == "buy":
             if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
@@ -147,10 +149,11 @@ class BackpackTrade(Backpack):
             if self.trade_amount[0] * 0.8 > amount_usd:
                 raise TradeException(
                     f"Not enough funds to trade. Trade Stopped. Current balance ~ {amount_usd:.2f}$")
-            elif self.trade_amount[1] > amount_usd:
-                self.trade_amount[1] = amount_usd
 
             if side == "buy":
+                if self.trade_amount[1] > amount_usd:
+                    self.trade_amount[1] = amount_usd
+
                 amount_usd = random.uniform(*self.trade_amount)
                 amount = amount_usd
             elif side == "sell":
@@ -190,7 +193,7 @@ class BackpackTrade(Backpack):
         if result.get("createdAt"):
             self.current_volume += self.amount_usd
 
-            logger.info(f"{side.capitalize()} {fixed_amount} {symbol}. "
+            logger.info(f"{side.capitalize()} {fixed_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
                         f"Traded volume: {self.current_volume:.2f}$")
 
             return True
