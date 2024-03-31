@@ -1,3 +1,5 @@
+CONVERT_ALL_TO_USDC = False  # convert all balances to USDC only
+
 THREADS = 1  # Enter amount of threads
 DELAY_BETWEEN_TRADE = (1, 2)  # Execute delay between every trade (Buy -> Delay -> Sell -> Buy -> Delay ...)
 DELAY_BETWEEN_DEAL = (0, 0)  # Execute delay between full trade (Buy -> Sell -> Delay -> Buy -> Sell -> Delay ...)

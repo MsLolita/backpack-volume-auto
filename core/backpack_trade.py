@@ -4,6 +4,8 @@ import traceback
 from asyncio import sleep
 from typing import Optional
 from math import floor
+
+from prettytable import PrettyTable, from_csv
 from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_exception_type, retry_if_exception_type
 
 from backpack import Backpack
@@ -46,7 +48,7 @@ class BackpackTrade(Backpack):
             'decimal': 0,
         },
         "WIF": {
-            'decimal': 0
+            'decimal': 1
         },
         "USDT": {
             'decimal': 0
@@ -68,6 +70,8 @@ class BackpackTrade(Backpack):
             api_secret=api_secret,
             proxy=proxy and Proxy.from_str(proxy.strip()).as_url
         )
+
+        self.api_id = api_key[:15] + '...'
 
         self.trade_delay, self.deal_delay, self.needed_volume, self.min_balance_to_left, self.trade_amount = args
 
@@ -113,16 +117,16 @@ class BackpackTrade(Backpack):
 
     @retry(stop=stop_after_attempt(10), wait=wait_random(5, 7), reraise=True,
            retry=retry_if_exception_type(FokOrderException))
-    async def sell(self, symbol: str):
+    async def sell(self, symbol: str, use_global_options: bool = True):
         side = 'sell'
         token = symbol.split('_')[0]
-        price, amount = await self.get_trade_info(symbol, side, token)
+        price, amount = await self.get_trade_info(symbol, side, token, use_global_options)
 
         return await self.trade(symbol, amount, side, price)
 
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), before_sleep=lambda e: logger.info(e),
            retry=retry_if_not_exception_type(TradeException), reraise=True)
-    async def get_trade_info(self, symbol: str, side: str, token: str):
+    async def get_trade_info(self, symbol: str, side: str, token: str, use_global_options: bool = True):
         logger.info(f"Trying to {side.upper()} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
         # logger.info(f"Market price: {price} | Side: {side} | Token: {token}")
@@ -134,32 +138,33 @@ class BackpackTrade(Backpack):
 
         amount_usd = float(amount) * float(price) if side != 'buy' else float(amount)
 
-        if not self.trade_amount[0] and not self.trade_amount[1]:
-            pass
-        elif self.trade_amount[1] < 5:
-            self.trade_amount[0] = 5
-            self.trade_amount[1] = 5
-        elif self.trade_amount[0] < 5:
-            self.trade_amount[0] = 5
-
-        if side == "buy":
-            if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
-                raise TradeException(
-                    f"Stopped by min balance parameter {self.min_balance_to_left}. Current balance ~ {amount_usd}$")
-
-        if self.trade_amount[1] > 0:
-            if self.trade_amount[0] * 0.8 > amount_usd:
-                raise TradeException(
-                    f"Not enough funds to trade. Trade Stopped. Current balance ~ {amount_usd:.2f}$")
+        if use_global_options:
+            if not self.trade_amount[0] and not self.trade_amount[1]:
+                pass
+            elif self.trade_amount[1] < 5:
+                self.trade_amount[0] = 5
+                self.trade_amount[1] = 5
+            elif self.trade_amount[0] < 5:
+                self.trade_amount[0] = 5
 
             if side == "buy":
-                if self.trade_amount[1] > amount_usd:
-                    self.trade_amount[1] = amount_usd
+                if self.min_balance_to_left > 0 and self.min_balance_to_left >= amount_usd:
+                    raise TradeException(
+                        f"Stopped by min balance parameter {self.min_balance_to_left}. Current balance ~ {amount_usd}$")
 
-                amount_usd = random.uniform(*self.trade_amount)
-                amount = amount_usd
-            elif side == "sell":
-                amount = amount_usd / float(price)
+            if self.trade_amount[1] > 0:
+                if self.trade_amount[0] * 0.8 > amount_usd:
+                    raise TradeException(
+                        f"Not enough funds to trade. Trade Stopped. Current balance ~ {amount_usd:.2f}$")
+
+                if side == "buy":
+                    if self.trade_amount[1] > amount_usd:
+                        self.trade_amount[1] = amount_usd
+
+                    amount_usd = random.uniform(*self.trade_amount)
+                    amount = amount_usd
+                elif side == "sell":
+                    amount = amount_usd / float(price)
 
         self.amount_usd = amount_usd
 
@@ -208,6 +213,54 @@ class BackpackTrade(Backpack):
         orderbook = json.loads(await response.read())
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
+
+    async def show_balances(self):
+        response = await self.get_balances()
+        balances = json.loads(await response.read())
+
+        table = self.get_table_from_dict(balances)
+        print(table)
+
+        with open("logs/balances.csv", "a") as fp:
+            fp.write(table.get_csv_string())
+
+        balances['private_key'] = self.api_id
+        with open("logs/balances.txt", "a") as fp:
+            fp.write(str(balances) + "\n")
+
+        return balances
+
+    def get_table_from_dict(self, balances: dict):
+        table_keys = list(balances.keys())
+        table_keys.sort(key=lambda x: x.startswith('USDC'), reverse=True)
+        table_headers = table_keys.copy()
+        table_headers.insert(0, "Private key")
+        table = PrettyTable(table_headers)
+        values = [to_fixed(balances[header]['available'], 2) for header in table_keys]
+        values.insert(0, self.api_id)
+        table.add_row(values)
+
+        return table
+
+    async def sell_all(self):
+        response = await self.get_balances()
+        balances = json.loads(await response.read())
+
+        for symbol in balances.keys():
+            if symbol.startswith('USDC'):
+                continue
+
+            if symbol != 'SOL' and float(balances[symbol]['available']) < 0.5:
+                continue
+            elif symbol == 'SOL' and float(balances[symbol]['available']) < 0.01:
+                continue
+
+            try:
+                await self.sell(f"{symbol}_USDC", use_global_options=False)
+            except TradeException as e:
+                pass
+
+        logger.info(f"Finished! Converted all balances to USD.")
 
     @staticmethod
     async def custom_delay(delays: tuple):

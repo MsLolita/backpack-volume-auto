@@ -8,7 +8,7 @@ from art import tprint
 
 from core.utils import logger
 from inputs.config import (ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH, THREADS, DELAY_BETWEEN_TRADE, DELAY_BETWEEN_DEAL,
-                           ALLOWED_ASSETS, NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT)
+                           ALLOWED_ASSETS, NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT, CONVERT_ALL_TO_USDC)
 
 
 def bot_info(name: str = ""):
@@ -29,7 +29,14 @@ async def worker_task(account: str, proxy: str):
         logger.error(f"WRONG API SECRET KEY !!!!!!!!!!!!!!!!!!!!!!!!: {e}")
         return
 
-    await backpack.start_trading(pairs=ALLOWED_ASSETS)
+    await backpack.show_balances()
+
+    if CONVERT_ALL_TO_USDC:
+        await backpack.sell_all()
+    else:
+        await backpack.start_trading(pairs=ALLOWED_ASSETS)
+
+    await backpack.show_balances()
 
     await backpack.close()
 
