@@ -27,7 +27,7 @@ async def worker_task(account: str, proxy: str):
                                  NEEDED_TRADE_VOLUME, MIN_BALANCE_TO_LEFT, TRADE_AMOUNT)
     except Exception as e:
         logger.error(f"WRONG API SECRET KEY !!!!!!!!!!!!!!!!!!!!!!!!: {e}")
-        return
+        return False
 
     await backpack.show_balances()
 
