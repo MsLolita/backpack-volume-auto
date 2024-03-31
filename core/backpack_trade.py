@@ -5,7 +5,7 @@ from asyncio import sleep
 from typing import Optional
 from math import floor
 
-from prettytable import PrettyTable, from_csv
+from prettytable import PrettyTable
 from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_exception_type, retry_if_exception_type
 
 from backpack import Backpack
@@ -260,7 +260,7 @@ class BackpackTrade(Backpack):
             except TradeException as e:
                 pass
 
-        logger.info(f"Finished! Converted all balances to USD.")
+        logger.info(f"Finished! All balances were converted to USDC.")
 
     @staticmethod
     async def custom_delay(delays: tuple):
