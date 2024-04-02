@@ -61,6 +61,9 @@ class BackpackTrade(Backpack):
         },
         "WEN": {
             'decimal': 0
+        },
+        "BTC": {
+            'decimal': 5
         }
     }
 
