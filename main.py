@@ -4,7 +4,9 @@ import sys
 
 from core.autoreger import AutoReger
 from core.backpack_trade import BackpackTrade
-from art import tprint
+
+from art import text2art
+from termcolor import colored, cprint
 
 from core.utils import logger
 from inputs.config import (ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH, THREADS, DELAY_BETWEEN_TRADE, DELAY_BETWEEN_DEAL,
@@ -12,11 +14,19 @@ from inputs.config import (ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH, THREADS, DELAY
 
 
 def bot_info(name: str = ""):
-    tprint(name)
+    cprint(text2art(name), 'green')
 
     if sys.platform == 'win32':
         ctypes.windll.kernel32.SetConsoleTitleW(f"{name}")
-    print("EnJoYeR's <crypto/> moves: https://t.me/+tdC-PXRzhnczNDli\n")
+
+    print(
+        f"{colored('EnJoYeR <crypto/> moves:', color='light_yellow')} "
+        f"{colored('https://t.me/+tdC-PXRzhnczNDli', color='light_green')}"
+    )
+    print(
+        f"{colored('To say thanks for work:', color='light_yellow')} "
+        f"{colored('0x000007c73a94f8582ef95396918dcd04f806cdd8', color='light_green')}"
+    )
 
 
 async def worker_task(account: str, proxy: str):
@@ -44,7 +54,7 @@ async def worker_task(account: str, proxy: str):
 
 
 async def main():
-    bot_info("Backpack_Trading")
+    bot_info("BACKPACK_AUTO")
 
     autoreger = AutoReger.get_accounts(ACCOUNTS_FILE_PATH, PROXIES_FILE_PATH)
     await autoreger.start(worker_task, THREADS)
