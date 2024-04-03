@@ -139,6 +139,7 @@ class BackpackTrade(Backpack):
            reraise=True)
     async def get_balance(self):
         response = await self.get_balances()
+        logger.debug(f"Balance: {await response.text()}")
         return json.loads(await response.read())
 
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5),
@@ -267,8 +268,7 @@ class BackpackTrade(Backpack):
         return table
 
     async def sell_all(self):
-        response = await self.get_balances()
-        balances = json.loads(await response.read())
+        balances = await self.get_balance()
 
         for symbol in balances.keys():
             if symbol.startswith('USDC'):
