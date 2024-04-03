@@ -11,6 +11,7 @@ from tenacity import stop_after_attempt, retry, wait_random, retry_if_not_except
 
 from backpack import Backpack
 from better_proxy import Proxy
+from termcolor import colored
 
 from inputs.config import DEPTH
 from .exceptions import TradeException, FokOrderException
@@ -97,6 +98,8 @@ class BackpackTrade(Backpack):
         logger.info(f"Finished! Traded volume ~ {self.current_volume:.2f}$")
 
     async def trade_worker(self, pair: str):
+        print()
+
         await self.custom_delay(delays=self.trade_delay)
         await self.buy(pair)
 
@@ -214,7 +217,7 @@ class BackpackTrade(Backpack):
         if result.get("createdAt"):
             self.current_volume += self.amount_usd
 
-            logger.info(f"{side.capitalize()} {readable_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
+            logger.info(f"{colored(f'✓ {side.capitalize()}', 'green' if side == 'buy' else 'red')} {readable_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
                         f"Traded volume: {self.current_volume:.2f}$")
 
             return True
