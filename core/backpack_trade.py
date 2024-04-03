@@ -85,6 +85,7 @@ class BackpackTrade(Backpack):
 
         self.current_volume: float = 0
         self.amount_usd = 0
+        self.min_balance_usd = 5
 
     async def start_trading(self, pairs: list[str]):
         try:
@@ -146,11 +147,14 @@ class BackpackTrade(Backpack):
            before_sleep=lambda e: logger.info(f"Get price and amount. Retrying... | {e}"),
            retry=retry_if_not_exception_type(TradeException), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str, use_global_options: bool = True):
-        logger.info(f"Trying to {side.upper()} {symbol}...")
+        # logger.info(f"Trying to {side.upper()} {symbol}...")
         price = await self.get_market_price(symbol, side, DEPTH)
         # logger.info(f"Market price: {price} | Side: {side} | Token: {token}")
         balances = await self.get_balance()
         # logger.info(f"Balances: {await response.text()} | Side: {side} | Token: {token}")
+
+        if side == 'buy' and (balances.get(token) is None or float(balances[token]['available']) < self.min_balance_usd):
+            raise TradeException(f"Top up your balance in USDC ({balances[token]['available']} $)!")
 
         amount = balances[token]['available']
 
