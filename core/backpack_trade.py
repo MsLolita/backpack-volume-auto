@@ -140,7 +140,14 @@ class BackpackTrade(Backpack):
            reraise=True)
     async def get_balance(self):
         response = await self.get_balances()
-        logger.debug(f"Balance: {await response.text()}")
+        msg = await response.text()
+        logger.debug(f"Balance response: {msg}")
+
+        if response.status != 200:
+            if msg == "Request has expired":
+                msg = "Update your time on computer!"
+            logger.info(f"Response: {colored(msg, 'yellow')} | Failed to get balance! Check logs for more info.")
+
         return await response.json()
 
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5),
