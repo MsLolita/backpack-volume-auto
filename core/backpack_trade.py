@@ -1,3 +1,4 @@
+import decimal
 import json
 import random
 import traceback
@@ -128,13 +129,14 @@ class BackpackTrade(Backpack):
         return await self.trade(symbol, amount, side, price)
 
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5),
-           before_sleep=lambda e: logger.debug(f"Get Balance. Retrying..."),
+           before_sleep=lambda e: logger.info(f"Get Balance. Retrying... | {e}"),
            reraise=True)
     async def get_balance(self):
         response = await self.get_balances()
         return json.loads(await response.read())
 
-    @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5), before_sleep=lambda e: logger.info(e),
+    @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5),
+           before_sleep=lambda e: logger.info(f"Get price and amount. Retrying... | {e}"),
            retry=retry_if_not_exception_type(TradeException), reraise=True)
     async def get_trade_info(self, symbol: str, side: str, token: str, use_global_options: bool = True):
         logger.info(f"Trying to {side.upper()} {symbol}...")
@@ -180,12 +182,14 @@ class BackpackTrade(Backpack):
         return price, amount
 
     @retry(stop=stop_after_attempt(9), wait=wait_random(2, 5), reraise=True,
+           before_sleep=lambda e: logger.info(f"Execute Trade. Retrying... | {e}"),
            retry=retry_if_not_exception_type((TradeException, FokOrderException)))
     async def trade(self, symbol: str, amount: str, side: str, price: str):
-        decimal = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
+        decimal_point = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
 
-        fixed_amount = to_fixed(amount, decimal)
-        readable_amount = "{:.7f}".format(float(fixed_amount))
+        fixed_amount = to_fixed(amount, decimal_point)
+        readable_amount = str(decimal.Decimal(fixed_amount))
+
         if readable_amount == "0":
             raise TradeException("Not enough funds to trade!")
 
@@ -210,7 +214,7 @@ class BackpackTrade(Backpack):
         if result.get("createdAt"):
             self.current_volume += self.amount_usd
 
-            logger.info(f"{side.capitalize()} {fixed_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
+            logger.info(f"{side.capitalize()} {readable_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
                         f"Traded volume: {self.current_volume:.2f}$")
 
             return True
@@ -218,7 +222,7 @@ class BackpackTrade(Backpack):
         raise TradeException(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
     @retry(stop=stop_after_attempt(7), before_sleep=
-           lambda e: logger.debug(f"Get market price. Retrying..."),
+           lambda e: logger.info(f"Get market price. Retrying... | {e}"),
            wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
