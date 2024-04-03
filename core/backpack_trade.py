@@ -177,14 +177,15 @@ class BackpackTrade(Backpack):
            retry=retry_if_not_exception_type((TradeException, FokOrderException)))
     async def trade(self, symbol: str, amount: str, side: str, price: str):
         decimal = BackpackTrade.ASSETS_INFO.get(symbol.split('_')[0].upper(), {}).get('decimal', 0)
-        fixed_amount = to_fixed(float(amount), decimal)
-        # print(amount, fixed_amount)
-        if fixed_amount == "0":
+
+        fixed_amount = to_fixed(amount, decimal)
+        readable_amount = "{:.7f}".format(float(fixed_amount))
+        if readable_amount == "0":
             raise TradeException("Not enough funds to trade!")
 
-        logger.bind(end="").debug(f"Side: {side} | Price: {price} | Amount: {fixed_amount}")
+        logger.bind(end="").debug(f"Side: {side} | Price: {price} | Amount: {readable_amount}")
 
-        response = await self.execute_order(symbol, side, order_type="limit", quantity=fixed_amount, price=price,
+        response = await self.execute_order(symbol, side, order_type="limit", quantity=readable_amount, price=price,
                                             time_in_force="FOK")
 
         resp_text = await response.text()
