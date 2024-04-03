@@ -217,7 +217,9 @@ class BackpackTrade(Backpack):
         if result.get("createdAt"):
             self.current_volume += self.amount_usd
 
-            logger.info(f"{colored(f'✓ {side.capitalize()}', 'green' if side == 'buy' else 'red')} {readable_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
+            decorated_side = colored(f'X {side.capitalize()}', 'green' if side == 'buy' else 'red')
+
+            logger.info(f"{decorated_side} {readable_amount} {symbol} ({to_fixed(self.amount_usd, 2)}$). "
                         f"Traded volume: {self.current_volume:.2f}$")
 
             return True
