@@ -128,7 +128,7 @@ class BackpackTrade(Backpack):
         return await self.trade(symbol, amount, side, price)
 
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5),
-           before_sleep=lambda e: logger.debug(f"Get Balance. Retrying in {e.wait:.2f} seconds..."),
+           before_sleep=lambda e: logger.debug(f"Get Balance. Retrying..."),
            reraise=True)
     async def get_balance(self):
         response = await self.get_balances()
@@ -218,7 +218,7 @@ class BackpackTrade(Backpack):
         raise TradeException(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
     @retry(stop=stop_after_attempt(7), before_sleep=
-           lambda e: logger.debug(f"Get market price. Retrying in {e.wait:.2f} seconds..."),
+           lambda e: logger.debug(f"Get market price. Retrying..."),
            wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
