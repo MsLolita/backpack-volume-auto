@@ -94,7 +94,7 @@ class BackpackTrade(Backpack):
                 if await self.trade_worker(pair):
                     break
         except TradeException as e:
-            logger.info(e)
+            logger.warning(e)
         except Exception as e:
             logger.error(f"{e} / Check logs in logs/out.log")
             logger.debug(f"{e} {traceback.format_exc()}")
@@ -154,7 +154,7 @@ class BackpackTrade(Backpack):
         # logger.info(f"Balances: {await response.text()} | Side: {side} | Token: {token}")
 
         if side == 'buy' and (balances.get(token) is None or float(balances[token]['available']) < self.min_balance_usd):
-            raise TradeException(f"Top up your balance in USDC ({balances[token]['available']} $)!")
+            raise TradeException(f"Top up your balance in USDC ({to_fixed(balances[token]['available'], 2)} $)!")
 
         amount = balances[token]['available']
 
@@ -294,5 +294,6 @@ class BackpackTrade(Backpack):
     async def custom_delay(delays: tuple):
         if delays[1] > 0:
             sleep_time = random.uniform(*delays)
-            logger.info(f"Sleep for {sleep_time:.2f} seconds")
+            msg = f"Delaying for {sleep_time} seconds..."
+            logger.info(colored(msg, 'grey'))
             await sleep(sleep_time)
