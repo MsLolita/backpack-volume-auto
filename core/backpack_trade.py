@@ -294,6 +294,6 @@ class BackpackTrade(Backpack):
     async def custom_delay(delays: tuple):
         if delays[1] > 0:
             sleep_time = random.uniform(*delays)
-            msg = f"Delaying for {sleep_time} seconds..."
+            msg = f"Delaying for {to_fixed(sleep_time, 2)} seconds..."
             logger.info(colored(msg, 'grey'))
             await sleep(sleep_time)
