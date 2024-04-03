@@ -66,6 +66,9 @@ class BackpackTrade(Backpack):
         },
         "BTC": {
             'decimal': 5
+        },
+        "W": {
+            'decimal': 2
         }
     }
 
