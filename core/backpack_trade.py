@@ -141,7 +141,7 @@ class BackpackTrade(Backpack):
     async def get_balance(self):
         response = await self.get_balances()
         logger.debug(f"Balance: {await response.text()}")
-        return json.loads(await response.read())
+        return await response.json()
 
     @retry(stop=stop_after_attempt(7), wait=wait_random(2, 5),
            before_sleep=lambda e: logger.info(f"Get price and amount. Retrying... | {e}"),
@@ -220,7 +220,7 @@ class BackpackTrade(Backpack):
         if response.status != 200:
             logger.info(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
-        result = json.loads(await response.read())
+        result = await response.json()
 
         if result.get("createdAt"):
             self.current_volume += self.amount_usd
@@ -239,13 +239,12 @@ class BackpackTrade(Backpack):
            wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
-        orderbook = json.loads(await response.read())
+        orderbook = await response.json()
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
 
     async def show_balances(self):
-        response = await self.get_balances()
-        balances = json.loads(await response.read())
+        balances = await self.get_balance()
 
         table = self.get_table_from_dict(balances)
         print(table)
