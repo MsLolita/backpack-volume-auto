@@ -16,7 +16,7 @@ Bot used to create trading volume on the [Backpack exchange](https://backpack.ex
 
 You have the flexibility to customize parameters in `inputs/config.py` 🧬
 
-![image](https://github.com/MsLolita/pybackpack/assets/58307006/f0ac849c-5ba1-4941-8d81-b3c1434284f6)
+![image](https://github.com/MsLolita/backpack-volume-auto/assets/58307006/c0456b43-c267-4926-8e51-ca0fb57b4020)
 
 1. Api keys configuration.🔒
 
