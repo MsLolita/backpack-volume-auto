@@ -69,6 +69,12 @@ class BackpackTrade(Backpack):
         },
         "W": {
             'decimal': 2
+        },
+        "TNSR": {
+            'decimal': 2
+        },
+        "PRCL": {
+            'decimal': 2
         }
     }
 
