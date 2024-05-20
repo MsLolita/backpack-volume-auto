@@ -75,6 +75,9 @@ class BackpackTrade(Backpack):
         },
         "PRCL": {
             'decimal': 2
+        },
+        "SHFL": {
+            'decimal': 2
         }
     }
 

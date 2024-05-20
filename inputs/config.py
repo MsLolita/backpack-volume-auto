@@ -9,7 +9,7 @@ MIN_BALANCE_TO_LEFT = 0  # min amount to left on the balance, if 0, it is traded
 
 TRADE_AMOUNT = [0, 0]  # (works nearly from +-20%), minimum (5$) and maximum amount to trade in USD, if 0 it will trade on FULL balance
 ALLOWED_ASSETS = ["SOL_USDC", "PYTH_USDC", "JTO_USDC", "HNT_USDC", "MOBILE_USDC", "BONK_USDC", "WIF_USDC", "JUP_USDC",
-                  "RENDER_USDC", "WEN_USDC", "BTC_USDC", "W_USDC", "TNSR_USDC", "PRCL_USDC"]
+                  "RENDER_USDC", "WEN_USDC", "BTC_USDC", "W_USDC", "TNSR_USDC", "PRCL_USDC", "SHFL_SDC"]
 
 # Volatility moment
 # DEPTH of limit order to trade as market order
