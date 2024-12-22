@@ -250,12 +250,16 @@ class BackpackTrade(Backpack):
 
         raise TradeException(f"Failed to trade! Check logs for more info. Response: {await response.text()}")
 
-    @retry(stop=stop_after_attempt(7), before_sleep=
-           lambda e: logger.info(f"Get market price. Retrying... | {e}"),
+    @retry(stop=stop_after_attempt(5), before_sleep=
+           lambda e: logger.info(f"Get market price. Retrying... | {e.outcome}"),
+           retry=retry_if_not_exception_type(TradeException),
            wait=wait_random(2, 5), reraise=True)
     async def get_market_price(self, symbol: str, side: str, depth: int = 1):
         response = await self.get_order_book_depth(symbol)
         orderbook = await response.json()
+
+        if len(orderbook['asks']) < depth or len(orderbook['bids']) < depth:
+            raise TradeException(f"Orderbook is empty! Check logs for more info. Response: {await response.text()}")
 
         return orderbook['asks'][depth][0] if side == 'buy' else orderbook['bids'][-depth][0]
 
