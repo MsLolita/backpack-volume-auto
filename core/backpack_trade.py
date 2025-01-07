@@ -170,7 +170,7 @@ class BackpackTrade(Backpack):
         # logger.info(f"Balances: {await response.text()} | Side: {side} | Token: {token}")
 
         if side == 'buy' and (balances.get(token) is None or float(balances[token]['available']) < self.min_balance_usd):
-            raise TradeException(f"Top up your balance in USDC ({to_fixed(balances[token]['available'], 2)} $)!")
+            raise TradeException(f"Top up your balance in USDC ({to_fixed(balances[token]['available'], 5)} $)!")
 
         amount = balances[token]['available']
 
@@ -284,7 +284,7 @@ class BackpackTrade(Backpack):
         table_headers = table_keys.copy()
         table_headers.insert(0, "Private key")
         table = PrettyTable(table_headers)
-        values = [to_fixed(balances[header]['available'], 2) for header in table_keys]
+        values = [to_fixed(balances[header]['available'], 5) for header in table_keys]
         values.insert(0, self.api_id)
         table.add_row(values)
 
@@ -296,15 +296,16 @@ class BackpackTrade(Backpack):
         for symbol in balances.keys():
             if symbol.startswith('USDC'):
                 continue
-
-            if symbol != 'SOL' and float(balances[symbol]['available']) < 0.5:
-                continue
-            elif symbol == 'SOL' and float(balances[symbol]['available']) < 0.01:
-                continue
+            # if symbol != 'PYTH':
+            #     continue
+            # if symbol != 'SOL' and float(balances[symbol]['available']) < 0.5:
+            #     continue
+            # elif symbol == 'SOL' and float(balances[symbol]['available']) < 0.01:
+            #     continue
 
             try:
                 await self.sell(f"{symbol}_USDC", use_global_options=False)
-            except TradeException as e:
+            except TradeException:
                 pass
 
         logger.info(f"Finished! All balances were converted to USDC.")
